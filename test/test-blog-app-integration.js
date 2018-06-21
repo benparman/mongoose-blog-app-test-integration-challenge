@@ -88,7 +88,8 @@ describe('BlogPosts API Resource', function() {
         })
         .then(function(post) {
           expect(resPost.id).to.equal(post.id);
-          expect(resPost.author).to.equal(post.author);
+          expect(resPost.author).firstName.to.equal(post.author.firstName);
+          expect(resPost.author.lastName).to.equal(post.author.lastName);
           //this may need to be changed to:
           //expect(resPost.author).to.contain)(post.author.firstName); OR
           //expect(resPost.author.firstName).to.equal(post.author.firstName)
@@ -101,13 +102,33 @@ describe('BlogPosts API Resource', function() {
   });
 
   describe('POST endpoint', function(){
-    //****************LEFT OFF HERE - INSERT IT STATEMENT!!!****************
-    //****************LEFT OFF HERE - INSERT IT STATEMENT!!!****************
-    //****************LEFT OFF HERE - INSERT IT STATEMENT!!!****************
-    //****************LEFT OFF HERE - INSERT IT STATEMENT!!!****************
-    //****************LEFT OFF HERE - INSERT IT STATEMENT!!!****************
-    //****************LEFT OFF HERE - INSERT IT STATEMENT!!!****************
-    //****************LEFT OFF HERE - INSERT IT STATEMENT!!!****************
-    //****************LEFT OFF HERE - INSERT IT STATEMENT!!!****************
+    it('should add a new blog post', function() {
+      const newPost = generateBlogData();
+      let mostRecentPost; //MAY NOT NEED THIS - DELETE IF SO;
+
+      return chai.request(app)
+        .post('/posts')
+        .send(newPost)
+        .then(function(res) {
+          expect(res).to.have.status(201);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('object');
+          expect(res.body).to.include.keys(
+            'id', 'author', 'content', 'title', 'created');
+          expect(res.body.id).to.not.be.null;
+          expect(res.body.content).to.equal(newPost.content);
+          expect(res.body.title).to.equal(newPost.title);
+          expect(res.body.created).to.equal(newPost.created);
+
+          return BlogPost.findById(res.body.id);
+        })
+        .then(function(post) {
+          expect(post.author.firstName).to.equal(newPost.author.firstName);
+          expect(post.author.lastName).to.equal(newPost.author.lastName);
+          expect(post.title).to.equal(newPost.title);
+          expect(post.content).to.equal(newPost.content);
+          expect(post.created).to.equal(newPost.created);
+        });
+    });
   });
 });
