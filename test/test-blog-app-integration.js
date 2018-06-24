@@ -4,9 +4,7 @@ const chai = require('chai');
 const chaiHttp = require('chai-http');
 const faker = require('faker');
 const mongoose = require('mongoose');
-
 const expect = chai.expect;
-
 const {BlogPost} = require('../models'); // ".."" moves up one level, out of test and into root
 const {app, runServer, closeServer} = require('../server');
 const {TEST_DATABASE_URL} = require('../config');
@@ -14,7 +12,7 @@ const {TEST_DATABASE_URL} = require('../config');
 chai.use(chaiHttp);
 
 function seedBlogData() {
-  // console.info('seeding blog data');
+  console.info('seeding blog data');
   const seedData = [];
   for (let i=0; i<10; i++) {
     seedData.push({
@@ -28,7 +26,6 @@ function seedBlogData() {
   }
   return BlogPost.insertMany(seedData);
 }
-
 function generateBlogData() {
   return {
     title: faker.lorem.words(),
@@ -39,7 +36,6 @@ function generateBlogData() {
     content: faker.lorem.sentences(),
   };
 }
-
 function tearDownDb() {
   return new Promise((resolve, reject) => {
     console.warn('Deleting database');
@@ -48,7 +44,6 @@ function tearDownDb() {
       .catch(err => reject(err));
   });
 }
-
 describe('BlogPosts API Resource', function() {
   before(function() {
     return runServer(TEST_DATABASE_URL);
@@ -62,7 +57,6 @@ describe('BlogPosts API Resource', function() {
   after(function() {
     return closeServer();
   });
-  
   describe('GET endpoint', function() {
     it('should return all existing blog posts', function() {
       let res;
@@ -70,7 +64,7 @@ describe('BlogPosts API Resource', function() {
         .get('/posts')
         .then(function(_res) {
           res = _res;
-          console.log("res, as defined by _res", res.body);
+          // console.log("res, as defined by _res", res.body);
           expect(res).to.have.status(200);
           expect(res.body).to.have.lengthOf.at.least(1);
           return BlogPost.count();
@@ -111,12 +105,9 @@ describe('BlogPosts API Resource', function() {
         });
     });
   });
-
   describe('POST endpoint', function(){
     it('should add a new blog post', function() {
       const newPost = generateBlogData();
-      let mostRecentPost; //MAY NOT NEED THIS - DELETE IF SO;
-
       return chai.request(app)
         .post('/posts')
         .send(newPost)
@@ -129,7 +120,6 @@ describe('BlogPosts API Resource', function() {
           expect(res.body.id).to.not.be.null;
           expect(res.body.content).to.equal(newPost.content);
           expect(res.body.title).to.equal(newPost.title);
-
           return BlogPost.findById(res.body.id);
         })
         .then(function(post) {
@@ -140,7 +130,6 @@ describe('BlogPosts API Resource', function() {
         });
     });
   });
-
   describe('PUT endpoint', function() {
     it('should update specified fields within a blog post', function() {
       const updateData = {
@@ -162,6 +151,26 @@ describe('BlogPosts API Resource', function() {
         .then(function(blogpost) {
           expect(blogpost.title).to.equal(updateData.title);
           expect(blogpost.content).to.equal(updateData.content);
+        });
+    });
+  });
+  describe('DELETE endpoint', function() {
+    it('should delete a blog post by id', function() {
+      let blogpost;
+      console.log('LOGGING BlogPost ON LINE 171', BlogPost);
+      console.log('BlogPost.FindOne() from Line 161', BlogPost.findOne());
+      return BlogPost
+        .findOne()
+        .then(function(_blogpost) {
+          blogpost = _blogpost;
+          return chai.request(app).delete(`/posts/${blogpost.id}`);
+        })
+        .then(function(res) {
+          expect(res).to.have.status(204);
+          return BlogPost.findById(blogpost.id);
+        })
+        .then(function(_blogpost) {
+          expect(_blogpost).to.be.null;
         });
     });
   });
