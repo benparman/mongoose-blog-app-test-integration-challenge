@@ -142,6 +142,27 @@ describe('BlogPosts API Resource', function() {
   });
 
   describe('PUT endpoint', function() {
-
+    it('should update specified fields within a blog post', function() {
+      const updateData = {
+        title: 'UPDATED TITLE - PUT WORKED!',
+        content: 'UPDATED CONTENT - PUT WORKED!'
+      };
+      return BlogPost
+        .findOne()
+        .then(function(blogpost) {
+          updateData.id = blogpost.id;
+          return chai.request(app)
+            .put(`/posts/${blogpost.id}`)
+            .send(updateData);
+        })
+        .then(function(res) {
+          expect(res).to.have.status(204);
+          return BlogPost.findById(updateData.id);
+        })
+        .then(function(blogpost) {
+          expect(blogpost.title).to.equal(updateData.title);
+          expect(blogpost.content).to.equal(updateData.content);
+        });
+    });
   });
 });
